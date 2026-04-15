@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Netflix Clone Pro</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:Arial}
+body{background:#000;color:#fff}
+header{display:flex;justify-content:space-between;align-items:center;padding:20px 40px;position:fixed;width:100%;z-index:10;background:linear-gradient(to bottom,rgba(0,0,0,0.9),transparent)}
+.logo{color:red;font-size:28px;font-weight:bold}
+.btn{background:red;border:none;color:#fff;padding:8px 16px;cursor:pointer;border-radius:4px}
+.hero{height:90vh;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;background:#111}
+.hero h1{font-size:48px;margin-bottom:20px}
+.hero p{margin-bottom:20px}
+.row{padding:20px}
+.movies{display:flex;overflow-x:auto;gap:10px}
+.movies img{width:180px;border-radius:6px;transition:transform .3s,box-shadow .3s}
+.movies img:hover{transform:scale(1.1);box-shadow:0 0 20px rgba(255,0,0,0.6)}
+footer{text-align:center;padding:20px;color:#888} 
+
+/* Modal Video */
+.modal{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);display:none;justify-content:center;align-items:center}
+.modal iframe{width:80%;height:70%}
+
+/* Auth */
+.auth{position:fixed;top:0;left:0;width:100%;height:100%;background:#000;display:flex;justify-content:center;align-items:center}
+.auth-box{background:#111;padding:30px;border-radius:8px;text-align:center}
+.auth-box input{display:block;margin:10px 0;padding:10px;width:250px}
+</style>
+</head>
+<body>
+
+<!-- Login / Signup -->
+<div class="auth" id="auth">
+  <div class="auth-box">
+    <h2 id="authTitle">Login</h2>
+    <input type="text" id="username" placeholder="Username">
+    <input type="password" id="password" placeholder="Password">
+    <button class="btn" onclick="login()">Login</button>
+    <p onclick="toggleAuth()" style="cursor:pointer;margin-top:10px">Switch to Signup</p>
+  </div>
+</div>
+
+<header>
+  <div class="logo">NETFLIX</div>
+  <button class="btn" onclick="logout()">Logout</button>
+</header>
+
+<section class="hero">
+  <h1>Unlimited Movies, TV Shows and More</h1>
+  <p>Streaming Demo with Real API</p>
+</section>
+
+<section class="row">
+  <h2>Trending Movies</h2>
+  <div class="movies" id="movieRow"></div>
+</section>
+
+<div class="modal" id="modal" onclick="closeModal()">
+  <iframe id="player" src="" frameborder="0" allowfullscreen></iframe>
+</div>
+
+<footer>Netflix Clone Pro © 2026</footer>
+
+<script>
+// 🔥 Replace with your TMDB API KEY
+const API_KEY = "YOUR_TMDB_API_KEY";
+const BASE_URL = "https://api.themoviedb.org/3";
+const IMG_URL = "https://image.tmdb.org/t/p/w500";
+
+const movieRow = document.getElementById("movieRow");
+
+async function loadMovies(){
+  const res = await fetch(`${BASE_URL}/trending/movie/week?api_key=${API_KEY}`);
+  const data = await res.json();
+
+  data.results.forEach(movie=>{
+    const img = document.createElement("img");
+    img.src = IMG_URL + movie.poster_path;
+    img.onclick = ()=>playMovie(movie.id);
+    movieRow.appendChild(img);
+  });
+}
+
+async function playMovie(id){
+  const res = await fetch(`${BASE_URL}/movie/${id}/videos?api_key=${API_KEY}`);
+  const data = await res.json();
+  const trailer = data.results.find(v=>v.type==="Trailer");
+
+  if(trailer){
+    document.getElementById("modal").style.display="flex";
+    document.getElementById("player").src = `https://www.youtube.com/embed/${trailer.key}`;
+  }else{
+    alert("No trailer available");
+  }
+}
+
+function closeModal(){
+  document.getElementById("modal").style.display="none";
+  document.getElementById("player").src="";
+}
+
+// 🔐 Auth System (LocalStorage)
+function login(){
+  const u=document.getElementById("username").value;
+  const p=document.getElementById("password").value;
+
+  if(localStorage.getItem(u)===p){
+    document.getElementById("auth").style.display="none";
+    loadMovies();
+  }else{
+    alert("Invalid login or signup first");
+  }
+}
+
+function toggleAuth(){
+  const title=document.getElementById("authTitle");
+  if(title.innerText==="Login"){
+    title.innerText="Signup";
+    document.querySelector(".auth-box button").innerText="Signup";
+    document.querySelector(".auth-box button").onclick=signup;
+  }else{
+    title.innerText="Login";
+    document.querySelector(".auth-box button").innerText="Login";
+    document.querySelector(".auth-box button").onclick=login;
+  }
+}
+
+function signup(){
+  const u=document.getElementById("username").value;
+  const p=document.getElementById("password").value;
+
+  localStorage.setItem(u,p);
+  alert("Signup successful, now login");
+  toggleAuth();
+}
+
+function logout(){
+  location.reload();
+}
+</script>
+
+</body>
+</html>
